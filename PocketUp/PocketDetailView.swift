@@ -104,14 +104,13 @@ struct PocketDetailView: View {
                 }
             } label: {
                 Image(systemName: "ellipsis.circle.fill")
-                    .font(.system(size: 22))
+                    .font(.system(size: 30))
                     .foregroundStyle(DenimTheme.fabricWhite, DenimTheme.fabricWhite.opacity(0.2))
                     .padding(.vertical, 8)
                     .padding(.horizontal, 12)
             }
         }
         .padding(.horizontal, 8)
-        .padding(.top, topSafeArea)
     }
 
     // MARK: - Hero Header

@@ -5,7 +5,6 @@
 //  Created by Erfan Yarahmadi on 10/03/26.
 //
 
-
 import SwiftUI
 
 // MARK: - Denim Theme
@@ -35,34 +34,104 @@ struct DenimTheme {
     }
 }
 
-// MARK: - Denim Texture Background
+// MARK: - Procedural Denim Texture
 struct DenimTextureBackground: View {
+
     var body: some View {
         ZStack {
-            DenimTheme.bgDeep
+
+            // Base denim color
+            DenimTheme.rawDenim
+
+            // Subtle color variation
+            LinearGradient(
+                colors: [
+                    DenimTheme.rawDenim,
+                    DenimTheme.denim,
+                    DenimTheme.bgDeep
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .blendMode(.multiply)
+            .opacity(0.6)
+
+            // Twill weave pattern
             Canvas { ctx, size in
-                let spacing: CGFloat = 8
-                let warp  = Color.white.opacity(0.025)
-                let weft  = Color.white.opacity(0.018)
-                // warp threads
+
+                let spacing: CGFloat = 6
+                let slope: CGFloat = 0.65
+
                 var x: CGFloat = -size.height
+
                 while x < size.width + size.height {
-                    var p = Path()
-                    p.move(to: .init(x: x, y: 0))
-                    p.addLine(to: .init(x: x + size.height * 0.3, y: size.height))
-                    ctx.stroke(p, with: .color(warp), lineWidth: 1)
+
+                    var path = Path()
+                    path.move(to: CGPoint(x: x, y: 0))
+                    path.addLine(to: CGPoint(
+                        x: x + size.height * slope,
+                        y: size.height
+                    ))
+
+                    ctx.stroke(
+                        path,
+                        with: .color(Color.white.opacity(0.07)),
+                        lineWidth: 1.4
+                    )
+
                     x += spacing
                 }
-                // weft threads
-                var y: CGFloat = -size.width
-                while y < size.height + size.width {
-                    var p = Path()
-                    p.move(to: .init(x: 0, y: y))
-                    p.addLine(to: .init(x: size.width, y: y + size.width * 0.15))
-                    ctx.stroke(p, with: .color(weft), lineWidth: 0.8)
-                    y += spacing * 1.2
+
+                // Secondary weave layer (offset)
+                var x2: CGFloat = -size.height + spacing/2
+
+                while x2 < size.width + size.height {
+
+                    var path = Path()
+                    path.move(to: CGPoint(x: x2, y: 0))
+                    path.addLine(to: CGPoint(
+                        x: x2 + size.height * slope,
+                        y: size.height
+                    ))
+
+                    ctx.stroke(
+                        path,
+                        with: .color(Color.white.opacity(0.035)),
+                        lineWidth: 1
+                    )
+
+                    x2 += spacing
                 }
             }
+
+            // Fiber noise layer
+            Canvas { ctx, size in
+
+                let fiberCount = 3500
+
+                for _ in 0..<fiberCount {
+
+                    let x = CGFloat.random(in: 0...size.width)
+                    let y = CGFloat.random(in: 0...size.height)
+
+                    var dot = Path()
+                    dot.addEllipse(
+                        in: CGRect(
+                            x: x,
+                            y: y,
+                            width: 1,
+                            height: 1
+                        )
+                    )
+
+                    ctx.fill(
+                        dot,
+                        with: .color(Color.white.opacity(0.025))
+                    )
+                }
+            }
+            .blendMode(.overlay)
+
         }
         .ignoresSafeArea()
     }
@@ -70,14 +139,19 @@ struct DenimTextureBackground: View {
 
 // MARK: - Stitch Border
 struct StitchBorder: ViewModifier {
-    var color: Color       = DenimTheme.stitchGold
+    var color: Color = DenimTheme.stitchGold
     var cornerRadius: CGFloat = 16
-    var dash: [CGFloat]    = [6, 4]
+    var dash: [CGFloat] = [6, 4]
 
     func body(content: Content) -> some View {
         content.overlay(
             RoundedRectangle(cornerRadius: cornerRadius)
-                .strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: dash))
+                .strokeBorder(
+                    style: StrokeStyle(
+                        lineWidth: 1.5,
+                        dash: dash
+                    )
+                )
                 .foregroundColor(color.opacity(0.7))
                 .padding(3)
         )
@@ -85,43 +159,100 @@ struct StitchBorder: ViewModifier {
 }
 
 extension View {
-    func stitchBorder(color: Color = DenimTheme.stitchGold, cornerRadius: CGFloat = 16) -> some View {
-        modifier(StitchBorder(color: color, cornerRadius: cornerRadius))
+    func stitchBorder(
+        color: Color = DenimTheme.stitchGold,
+        cornerRadius: CGFloat = 16
+    ) -> some View {
+        modifier(
+            StitchBorder(
+                color: color,
+                cornerRadius: cornerRadius
+            )
+        )
     }
 }
 
-// MARK: - Pocket Shape (jean-pocket curved opening)
+// MARK: - Pocket Shape
 struct PocketShape: Shape {
+
     var topCurveDepth: CGFloat = 18
 
     func path(in rect: CGRect) -> Path {
+
         var path = Path()
         let r: CGFloat = 16
+
         path.move(to: CGPoint(x: rect.minX + r, y: rect.minY))
-        // curved top opening
+
         path.addLine(to: CGPoint(x: rect.midX - 30, y: rect.minY))
+
         path.addQuadCurve(
-            to:      CGPoint(x: rect.midX + 30, y: rect.minY),
-            control: CGPoint(x: rect.midX,      y: rect.minY + topCurveDepth)
+            to: CGPoint(x: rect.midX + 30, y: rect.minY),
+            control: CGPoint(
+                x: rect.midX,
+                y: rect.minY + topCurveDepth
+            )
         )
+
         path.addLine(to: CGPoint(x: rect.maxX - r, y: rect.minY))
-        path.addArc(center: CGPoint(x: rect.maxX - r, y: rect.minY  + r), radius: r, startAngle: .degrees(-90), endAngle: .degrees(  0), clockwise: false)
+
+        path.addArc(
+            center: CGPoint(x: rect.maxX - r, y: rect.minY + r),
+            radius: r,
+            startAngle: .degrees(-90),
+            endAngle: .degrees(0),
+            clockwise: false
+        )
+
         path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - r))
-        path.addArc(center: CGPoint(x: rect.maxX - r, y: rect.maxY  - r), radius: r, startAngle: .degrees(  0), endAngle: .degrees( 90), clockwise: false)
+
+        path.addArc(
+            center: CGPoint(x: rect.maxX - r, y: rect.maxY - r),
+            radius: r,
+            startAngle: .degrees(0),
+            endAngle: .degrees(90),
+            clockwise: false
+        )
+
         path.addLine(to: CGPoint(x: rect.minX + r, y: rect.maxY))
-        path.addArc(center: CGPoint(x: rect.minX + r, y: rect.maxY  - r), radius: r, startAngle: .degrees( 90), endAngle: .degrees(180), clockwise: false)
+
+        path.addArc(
+            center: CGPoint(x: rect.minX + r, y: rect.maxY - r),
+            radius: r,
+            startAngle: .degrees(90),
+            endAngle: .degrees(180),
+            clockwise: false
+        )
+
         path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + r))
-        path.addArc(center: CGPoint(x: rect.minX + r, y: rect.minY  + r), radius: r, startAngle: .degrees(180), endAngle: .degrees(270), clockwise: false)
+
+        path.addArc(
+            center: CGPoint(x: rect.minX + r, y: rect.minY + r),
+            radius: r,
+            startAngle: .degrees(180),
+            endAngle: .degrees(270),
+            clockwise: false
+        )
+
         path.closeSubpath()
+
         return path
     }
 }
 
 // MARK: - Spring Button Style
 struct SpringButtonStyle: ButtonStyle {
+
     func makeBody(configuration: Configuration) -> some View {
+
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.92 : 1.0)
-            .animation(.spring(response: 0.25, dampingFraction: 0.6), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.92 : 1)
+            .animation(
+                .spring(
+                    response: 0.25,
+                    dampingFraction: 0.6
+                ),
+                value: configuration.isPressed
+            )
     }
 }

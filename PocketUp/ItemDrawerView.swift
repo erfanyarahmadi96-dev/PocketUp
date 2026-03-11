@@ -68,17 +68,17 @@ struct ItemDrawerView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("ITEMS")
-                    .font(DenimTheme.titleFont(14))
+                    .font(DenimTheme.titleFont(18))
                     .foregroundColor(DenimTheme.fabricWhite)
                     .kerning(3)
                 Text("Hold & drag to pocket")
-                    .font(DenimTheme.bodyFont(10))
+                    .font(DenimTheme.bodyFont(14))
                     .foregroundColor(DenimTheme.fadedDenim)
             }
             Spacer()
             Button(action: onClose) {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 20))
+                    .font(.system(size: 22))
                     .foregroundStyle(DenimTheme.fadedDenim, DenimTheme.bgMid)
             }
         }
@@ -167,11 +167,11 @@ struct ItemDrawerView: View {
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "plus.circle.fill").font(.system(size: 13))
-                Text("New Item").font(DenimTheme.labelFont(11)).kerning(1.5)
+                Text("New Item").font(DenimTheme.labelFont(14)).kerning(1.5)
             }
             .foregroundColor(DenimTheme.stitchGold)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 13)
+            .padding(.vertical, 20)
             .background(DenimTheme.bgMid)
             .overlay(Rectangle().frame(height: 1).foregroundColor(DenimTheme.bgDeep), alignment: .top)
         }
